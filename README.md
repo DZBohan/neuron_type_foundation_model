@@ -155,4 +155,175 @@ The script produces a scatter plot showing cell embeddings colored by their base
 
 * Any specified subclusters are overlaid as hollow black circles.
 
-Program 2: 
+## Program 2: s2_h5adCheck.py
+
+This script inspects the contents of a single-cell .h5ad Anndata. It prints summary information about the dataset, including the number of cells and genes, available metadata columns in both observations (obs) and variables (var), as well as any unstructured metadata (uns). In addition, it provides a detailed summary of the column anatomical_division_label, including unique categories, counts, and example values. This step is designed for exploratory data inspection before downstream analysis.
+
+1. Parameters
+
+Path to .h5ad file (hard-coded in the script):
+
+2. Outputs
+
+The script prints information to the terminal:
+
+* Basic dataset info: number of cells and genes.
+
+* Metadata columns in obs: list of available per-cell annotations (e.g., cell_type, anatomical_division_label).
+
+* Metadata columns in var: list of gene-level annotations.
+
+* Keys in uns: any additional stored metadata.
+
+* Summary of anatomical_division_label:
+
+	* All unique categories.
+
+	* Top-10 categories with their cell counts.
+
+	* Example values from the first 10 cells.
+
+### Program 9: s9_fModelMain.py
+
+This script performs pre-training of a Transformer-based foundation model on a single-cell RNA-seq dataset.
+
+The continuous gene expression values are normalized, log-transformed, discretized into bins (quantization), and then masked at random.
+
+The model learns to reconstruct the masked tokens using an encoder-only Transformer, similar to masked language modeling in NLP.
+
+The script logs training/validation performance, evaluates perplexity and masked prediction accuracy, and saves checkpoints, metrics, and diagnostic plots.
+
+1. Parameters
+
+The script uses hard-coded configuration values at the top of the file (the “Config Zone”):
+
+* DATA_PATH: Path to input .h5ad file (AnnData object with cell × gene matrix).
+
+* CHECKPOINT_DIR / LOG_DIR / FIG_DIR: Output directories for model weights, logs, and figures.
+
+* SEED: Random seed for reproducibility.
+
+* USE_LOG1P: Whether to apply log1p transformation after normalization.
+
+* NUM_BINS: Number of discrete bins for expression quantization.
+
+* BATCH_SIZE / VAL_BATCH: Batch sizes for training and validation.
+
+* EPOCHS: Number of training epochs.
+
+* EMB_DIM / NHEAD / NLAYERS / DROPOUT: Transformer architecture hyperparameters.
+
+* LR / WEIGHT_DECAY: Optimizer learning rate and weight decay.
+
+* VAL_RATIO: Fraction of cells held out for validation.
+
+* MASK_RATIO: Fraction of genes masked per cell.
+
+* NONZERO_FRAC: Proportion of masked positions forced to come from nonzero expression values.
+
+2. Output
+
+* Checkpoints (CHECKPOINT_DIR/hello_model_best.pt, hello_model_last.pt): Best-performing model on validation loss, and final epoch model.
+
+* Binning metadata (binning_meta.npz): Stores per-gene bin edges, gene order, and preprocessing settings for downstream reproducibility.
+
+* Logs (LOG_DIR/train.log): Training and validation progress with losses, perplexity, and masked accuracy.
+
+* Training metrics CSV (LOG_DIR/training_metrics.csv): Epoch-wise values of train/validation loss, perplexity, and accuracy.
+
+* Figures (FIG_DIR/): Line plots of train loss, val loss, val perplexity, and val masked accuracy.
+
+* Quick demo (console log): Example masked predictions for one validation cell, showing top-k guesses vs. ground truth.
+
+## Program 10: s10_probeEval.py
+
+This script evaluates my pre-trained Transformer by training a linear probe (logistic regression) on top of the model’s frozen embeddings. Here are the steps:
+
+* Loads an AnnData .h5ad dataset and applies the same preprocessing as in pre-training (normalize_total, optional log1p).
+
+* Loads the saved tokenizer/binning metadata (binning_meta.npz) to reorder genes and re-bin the expressions exactly as during pre-train.
+
+* Loads the pre-trained Transformer checkpoint, runs encode() to extract per-cell embeddings (mean-pooled across genes).
+
+* Splits cells into train/test and fits a logistic regression classifier to predict Excitatory (1) vs Inhibitory (0) labels.
+
+* Reports Accuracy, F1, ROC-AUC, saves a confusion matrix, and produces PCA and ROC plots.
+
+* Saves embeddings, labels, the trained probe, and a run metadata JSON for reproducibility.
+
+1. Parameters
+
+--adata (required): Path to the .h5ad. Must contain the same genes as used in pre-train.
+
+--checkpoint (required): Path to pre-trained Transformer weights (e.g., hello_model_best.pt).
+
+--binmeta (required): Path to binning_meta.npz saved in pre-train (contains edges, gene_names, num_bins, etc.). Used to re-bin and align gene order.
+
+--use_log1p: Apply log1p after normalization. Must match pre-train.
+
+--num_bins (default 20): Number of bins; must equal the value used in pre-train.
+
+--batch_size (default 128): Batch size for embedding extraction.
+
+--emb_dim, --nhead, --nlayers, --dropout, --mask_token_id: Model architecture hyperparameters; must match the pre-trained checkpoint.
+
+--val_ratio (default 0.2): Fraction of cells held out for probe testing (stratified).
+
+--outdir (default probe_outputs): Output directory for all artifacts.
+
+--label_col (default subtype): Column in adata.obs containing cell labels to be mapped.
+
+--exc_labels (default cluster_2523): Comma-separated values in label_col mapped to 1 (Excitatory).
+
+--inh_labels (default cluster_210): Comma-separated values in label_col mapped to 0 (Inhibitory).
+
+2. Outpus
+
+All files are written to --outdir:
+
+* embeddings.npy: 2D NumPy array [n_cells × emb_dim] with mean-pooled cell embeddings from the frozen Transformer.
+
+* labels.npy: 1D NumPy array [n_cells] of binary labels (0=Inhibitory, 1=Excitatory).
+
+* cells.tsv: TSV mapping of cell (obs name) to numeric label.
+
+* logreg_probe.pkl: Trained logistic regression probe (saved with joblib).
+
+* confusion_matrix.csv: 2×2 table with counts for true/predicted classes.
+
+* pca_probe.png: PCA (2D) visualization of embeddings colored by label.
+
+* roc_probe.png: ROC curve with AUC for the held-out test set.
+
+* run_meta.json: JSON capturing all key settings and metrics (paths, binning, model hyperparameters, accuracy/F1/ROC-AUC, n_cells/n_genes).
+
+## Program 11: s11_afterProbeVis.py
+
+This script performs additional visualization of the learned cell embeddings after the probe evaluation. It applies two common dimensionality reduction methods—t-SNE and UMAP—to project the high-dimensional embeddings into 2D space. 
+
+Cells are colored according to their neuronal type labels (Excitatory vs. Inhibitory), allowing users to visually inspect whether the embeddings separate biological subtypes.
+
+1. Parameters
+
+* embeddings.npy: A NumPy array of shape (cells × dimensions), containing the embeddings exported by the probe script.
+
+* labels.npy: A NumPy array of shape (cells,) with binary class labels (0 = Inhibitory neurons, 1 = Excitatory neurons).
+
+* perplexity (default=30): t-SNE parameter that balances local vs. global structure.
+
+* random_state (default=42): Random seed to ensure reproducibility.
+
+* n_components (default=2): Number of output dimensions (2D projection).
+
+2. Outputs
+
+* tsne_probe.png: 2D scatter plot of embeddings reduced by t-SNE, colored by neuronal labels.
+
+* umap_probe.png: 2D scatter plot of embeddings reduced by UMAP, colored by neuronal labels.
+
+Clear separation of excitatory (red) and inhibitory (blue) neurons suggests that the pretrained embeddings capture biologically relevant signals.
+
+## Pre-train Level Results
+
+[fig4]
+
