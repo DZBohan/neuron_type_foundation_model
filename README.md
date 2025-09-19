@@ -271,7 +271,11 @@ Printed summary to console, including:
 
 * File size of the .h5ad in human-readable units (e.g., MB, GB).
 
+[fig11]
+
 ## Program 6: s6_subh5adRegion.py
+
+
 
 ## Program 7: s7_makeUnique.py
 
