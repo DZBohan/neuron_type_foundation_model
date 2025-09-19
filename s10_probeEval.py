@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import os
 import argparse
 import numpy as np
@@ -21,7 +18,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # -----------------------------
-# Model (与预训练一致，并额外提供 encode() 接口以导出 embedding)
+# Model (same as pretraining, with an additional encode() interface to export embeddings)
 # -----------------------------
 class SimpleTransformer(nn.Module):
     def __init__(self, vocab_size, n_genes, emb_dim=32, nhead=4, nlayers=2, dropout=0.1, mask_token_id=20):
@@ -38,7 +35,7 @@ class SimpleTransformer(nn.Module):
         self.output = nn.Linear(emb_dim, vocab_size)
 
     def forward(self, x):
-        """返回 logits（用于自监督训练）"""
+        """Return logits (for self-supervised training)"""
         bsz, seqlen = x.shape
         tok = self.token_embed(x)
         gene_idx = torch.arange(seqlen, device=x.device, dtype=torch.long)
@@ -50,18 +47,18 @@ class SimpleTransformer(nn.Module):
 
     @torch.no_grad()
     def encode(self, x):
-        """返回最后一层 hidden（不经过输出层）。"""
+        """Return the last hidden state (before output layer)."""
         bsz, seqlen = x.shape
         tok = self.token_embed(x)
         gene_idx = torch.arange(seqlen, device=x.device, dtype=torch.long)
         gene = self.gene_embed(gene_idx).unsqueeze(0).expand(bsz, -1, -1)
         emb = tok + gene
         hidden = self.transformer(emb)  # [B, S, D]
-        return hidden  # 直接返回隐状态
+        return hidden  # directly return hidden states
 
 
 # -----------------------------
-# Binning（与预训练一致）
+# Binning (same as pretraining)
 # -----------------------------
 def compute_bin_edges_per_gene(X, num_bins):
     qs = np.linspace(0, 1, num_bins + 1)
@@ -85,7 +82,7 @@ def apply_bin_edges(X, edges_list, num_bins):
 
 
 # -----------------------------
-# 可视化工具
+# Visualization tools
 # -----------------------------
 def plot_pca_scatter(emb, y, out_png, title="Probe embeddings (PCA-2D)"):
     pca = PCA(n_components=2, random_state=42)
@@ -118,15 +115,15 @@ def plot_roc(y_true, y_score, out_png, title="ROC (Logistic probe)"):
 
 
 # -----------------------------
-# 主流程
+# Main workflow
 # -----------------------------
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--adata", required=True, help="预训练后用于评估的 h5ad（与训练同源，同一 token 化）")
+    ap.add_argument("--adata", required=True, help="h5ad for evaluation after pretraining (same source, same tokenization)")
     ap.add_argument("--checkpoint", required=True, help="hello_model_best.pt")
-    ap.add_argument("--binmeta", required=True, help="binning_meta.npz（保存了 edges 与 gene_names）")
-    ap.add_argument("--use_log1p", action="store_true", help="是否在 normalize_total 后再 log1p（需与预训练一致）")
-    ap.add_argument("--num_bins", type=int, default=20, help="与预训练一致的分箱数")
+    ap.add_argument("--binmeta", required=True, help="binning_meta.npz (contains edges and gene_names)")
+    ap.add_argument("--use_log1p", action="store_true", help="Apply log1p after normalize_total (must match pretraining)")
+    ap.add_argument("--num_bins", type=int, default=20, help="Number of bins (must match pretraining)")
     ap.add_argument("--batch_size", type=int, default=128)
     ap.add_argument("--emb_dim", type=int, default=32)
     ap.add_argument("--nhead", type=int, default=4)
@@ -135,18 +132,18 @@ def main():
     ap.add_argument("--mask_token_id", type=int, default=20)
     ap.add_argument("--val_ratio", type=float, default=0.2)
     ap.add_argument("--outdir", default="probe_outputs")
-    ap.add_argument("--label_col", default="subtype", help="细胞标签列（默认读取 subset_2523_210.h5ad 的 'subtype'）")
-    # 默认将 cluster_2523 视为 excitatory(1)，cluster_210 视为 inhibitory(0)；可自行覆盖
-    ap.add_argument("--exc_labels", default="cluster_2523", help="逗号分隔，映射为 1 的取值")
-    ap.add_argument("--inh_labels", default="cluster_210", help="逗号分隔，映射为 0 的取值")
+    ap.add_argument("--label_col", default="subtype", help="Cell label column (default: 'subtype' from subset_2523_210.h5ad)")
+    # By default, cluster_2523 is considered excitatory(1), cluster_210 is considered inhibitory(0); can be overridden
+    ap.add_argument("--exc_labels", default="cluster_2523", help="Comma-separated values mapped to 1")
+    ap.add_argument("--inh_labels", default="cluster_210", help="Comma-separated values mapped to 0")
     args = ap.parse_args()
 
     os.makedirs(args.outdir, exist_ok=True)
 
-    device = torch.device("cpu")  # 若有 GPU 可改 "cuda"
+    device = torch.device("cpu")  # change to "cuda" if GPU available
     print(f"[info] device: {device}")
 
-    # ---- 1) 读取 AnnData 并按训练方式归一化 ----
+    # ---- 1) Load AnnData and normalize as in training ----
     adata = sc.read_h5ad(args.adata)
     X_work = adata.layers["counts"] if ("layers" in dir(adata) and "counts" in adata.layers) else adata.X
     X_work = X_work.toarray() if hasattr(X_work, "toarray") else np.asarray(X_work)
@@ -155,7 +152,7 @@ def main():
         sc.pp.log1p(adata)
     X = adata.X.toarray() if hasattr(adata.X, "toarray") else np.asarray(adata.X)
 
-    # ---- 2) 载入 tokenizer 元数据：基因顺序 + 分箱边界 ----
+    # ---- 2) Load tokenizer metadata: gene order + bin edges ----
     meta = np.load(args.binmeta, allow_pickle=True)
     edges_saved = list(meta["edges"])
     gene_names_saved = meta["gene_names"].astype(str)
@@ -163,20 +160,20 @@ def main():
     if nbins_saved != args.num_bins:
         raise ValueError(f"num_bins mismatch: saved={nbins_saved} vs arg={args.num_bins}")
 
-    # 保证基因顺序一致（用训练时的顺序重排当前数据）
+    # Ensure gene order matches (reorder current data to training order)
     current_gene_names = np.array(adata.var_names.values, dtype=str)
     idx = pd.Index(current_gene_names).get_indexer(gene_names_saved)
     if (idx < 0).any():
         missing = gene_names_saved[idx < 0]
-        raise ValueError(f"这些训练基因在当前数据中缺失：{len(missing)} 例如 {missing[:10]}")
-    X = X[:, idx]  # 现在 X 的列顺序与训练完全一致
+        raise ValueError(f"These training genes are missing in current data: {len(missing)} e.g. {missing[:10]}")
+    X = X[:, idx]  # now X columns are aligned with training
 
-    # ---- 3) 按保存的分箱边界对当前数据分箱 ----
+    # ---- 3) Bin current data using saved edges ----
     binned = apply_bin_edges(X, edges_saved, args.num_bins).astype(np.int64)
 
-    # ---- 4) 构造标签：subtype → 0/1 ----
+    # ---- 4) Construct labels: subtype → 0/1 ----
     if args.label_col not in adata.obs.columns:
-        raise ValueError(f"找不到标签列 '{args.label_col}'；可用列：{list(adata.obs.columns)}")
+        raise ValueError(f"Label column '{args.label_col}' not found; available columns: {list(adata.obs.columns)}")
     raw_labels = adata.obs[args.label_col].astype(str).values
 
     exc_set = set([x.strip() for x in args.exc_labels.split(",") if x.strip() != ""])
@@ -187,9 +184,9 @@ def main():
     y[np.isin(raw_labels, list(exc_set))] = 1
     if (y == -1).any():
         unknown = np.unique(raw_labels[y == -1])
-        raise ValueError(f"有未映射的标签：{unknown}. 请通过 --exc_labels / --inh_labels 指明映射。")
+        raise ValueError(f"Unmapped labels found: {unknown}. Please use --exc_labels / --inh_labels to specify mapping.")
 
-    # ---- 5) 载入预训练模型，导出 embedding ----
+    # ---- 5) Load pretrained model and export embeddings ----
     n_cells, n_genes = binned.shape
     model = SimpleTransformer(
         vocab_size=args.num_bins, n_genes=n_genes,
@@ -212,14 +209,14 @@ def main():
             all_emb.append(emb.cpu().numpy())
     all_emb = np.concatenate(all_emb, axis=0)  # [N, D]
 
-    # 保存中间产物
+    # Save intermediate results
     np.save(os.path.join(args.outdir, "embeddings.npy"), all_emb)
     np.save(os.path.join(args.outdir, "labels.npy"), y)
     pd.DataFrame({"cell": adata.obs_names.values, "label": y}).to_csv(
         os.path.join(args.outdir, "cells.tsv"), sep="\t", index=False
     )
 
-    # ---- 6) 线性探针：Logistic Regression ----
+    # ---- 6) Linear probe: Logistic Regression ----
     Xtr, Xte, ytr, yte = train_test_split(
         all_emb, y, test_size=args.val_ratio, random_state=42, stratify=y
     )
@@ -248,15 +245,15 @@ def main():
         os.path.join(args.outdir, "confusion_matrix.csv")
     )
 
-    # ---- 7) 可视化 ----
+    # ---- 7) Visualization ----
     plot_pca_scatter(all_emb, y, os.path.join(args.outdir, "pca_probe.png"))
     plot_roc(yte, y_score, os.path.join(args.outdir, "roc_probe.png"))
 
-    # 保存模型与探针
+    # Save model and probe
     import joblib
     joblib.dump(clf, os.path.join(args.outdir, "logreg_probe.pkl"))
 
-    # 记录元信息
+    # Record metadata
     meta_json = {
         "adata": os.path.abspath(args.adata),
         "checkpoint": os.path.abspath(args.checkpoint),
@@ -281,3 +278,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

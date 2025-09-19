@@ -1,15 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-"""
-Plot cortical embedding using provided x,y from cell_metadata.csv.
-- Colors = Top-K base clusters (by cell count), others -> "Others"
-- Base cluster is parsed from cluster_annotation_term.csv["description"]
-  (e.g., "MGE interneuron (subcluster 7)" -> "MGE interneuron")
-- Highlight any number of subclusters by cluster_alias (optional)
-- Legend is always placed OUTSIDE (right side), never blocking the plot.
-"""
-
 import argparse
 import os
 import re

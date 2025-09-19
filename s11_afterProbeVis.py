@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 import umap
 
-# 1. 载入数据
-embeddings = np.load("probe_outputs_v1/embeddings.npy")   # 细胞 × 维度
-labels = np.load("probe_outputs_v1/labels.npy")           # 0/1 标签
+# 1. Load data
+embeddings = np.load("probe_outputs_v1/embeddings.npy")   # cells × dimensions
+labels = np.load("probe_outputs_v1/labels.npy")           # 0/1 labels
 
 # 2. t-SNE
 tsne = TSNE(n_components=2, perplexity=30, random_state=42)

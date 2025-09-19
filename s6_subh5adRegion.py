@@ -1,15 +1,3 @@
-# filter_by_region
-#
-# Create a new h5ad containing only cells from a chosen region.
-# Example:
-#   python filter_by_region.py \
-#       --in subset_2523_210.h5ad \
-#       --out subset_2523_210_cortex.h5ad \
-#       --region "Cerebral cortex"
-#
-# You can also change the region column if needed:
-#   --region-col anatomical_division_label
-
 import argparse
 import anndata as ad
 import pandas as pd  # optional, nicer summaries

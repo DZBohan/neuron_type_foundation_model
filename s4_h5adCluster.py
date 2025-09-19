@@ -31,7 +31,7 @@ def main():
     print("[info] loading metadata CSV ...")
     usecols = [args.obsname_col, args.label_col]
     meta = pd.read_csv(args.meta, usecols=usecols, dtype={args.obsname_col: str})
-    # 保守做法：把 label 列转成字符串再比对
+    # Conservative approach: cast label column to string before comparison
     meta[args.label_col] = meta[args.label_col].astype(str)
 
     meta_sel = meta[meta[args.label_col].isin(keep_ids)].copy()
@@ -40,14 +40,14 @@ def main():
             f"[error] No rows in metadata where {args.label_col} in {keep_ids}."
         )
 
-    # 给每个 cluster 生成 subtype 名称
+    # Generate subtype name for each cluster
     id2sub = {cid: f"cluster_{cid}" for cid in keep_ids}
     meta_sel["subtype"] = meta_sel[args.label_col].map(id2sub)
 
     print("[info] loading AnnData (backed) ...")
     adata = ad.read_h5ad(args.adata, backed="r")
 
-    # 直接用 obs_names 与 metadata 的 obsname 列取交集
+    # Directly take intersection of obs_names with metadata obsname column
     obs_idx = pd.Index(adata.obs_names.astype(str))
     wanted = pd.Index(meta_sel[args.obsname_col].astype(str))
     keep_obs = obs_idx.intersection(wanted)
@@ -60,16 +60,16 @@ def main():
 
     print(f"[info] cells in clusters {keep_ids}: {len(keep_obs)}")
 
-    # 只把需要的行读入内存
+    # Load only the required rows into memory
     sub = adata[keep_obs, :].to_memory()
 
-    # 按 obs_name 对齐写入 subtype
+    # Align by obs_name and assign subtype
     meta_map = meta_sel.set_index(args.obsname_col)["subtype"]
     sub.obs["subtype"] = pd.Series(index=sub.obs_names, dtype="object")
     sub.obs.loc[meta_map.index.intersection(sub.obs.index), "subtype"] = \
         meta_map.loc[meta_map.index.intersection(sub.obs.index)].values
 
-    # 简单 sanity check
+    # Simple sanity check
     print("[info] subtype counts:")
     print(sub.obs["subtype"].value_counts(dropna=False))
 

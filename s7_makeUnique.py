@@ -1,4 +1,3 @@
-# make_unique.py
 import argparse
 import scanpy as sc
 import pandas as pd
