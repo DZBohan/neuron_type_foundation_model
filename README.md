@@ -371,29 +371,29 @@ This script evaluates my pre-trained Transformer by training a linear probe (log
 
 1. Parameters
 
---adata (required): Path to the .h5ad. Must contain the same genes as used in pre-train.
+* --adata (required): Path to the .h5ad. Must contain the same genes as used in pre-train.
 
---checkpoint (required): Path to pre-trained Transformer weights (e.g., hello_model_best.pt).
+* --checkpoint (required): Path to pre-trained Transformer weights (e.g., hello_model_best.pt).
 
---binmeta (required): Path to binning_meta.npz saved in pre-train (contains edges, gene_names, num_bins, etc.). Used to re-bin and align gene order.
+* --binmeta (required): Path to binning_meta.npz saved in pre-train (contains edges, gene_names, num_bins, etc.). Used to re-bin and align gene order.
 
---use_log1p: Apply log1p after normalization. Must match pre-train.
+* --use_log1p: Apply log1p after normalization. Must match pre-train.
 
---num_bins (default 20): Number of bins; must equal the value used in pre-train.
+* --num_bins (default 20): Number of bins; must equal the value used in pre-train.
 
---batch_size (default 128): Batch size for embedding extraction.
+* --batch_size (default 128): Batch size for embedding extraction.
 
---emb_dim, --nhead, --nlayers, --dropout, --mask_token_id: Model architecture hyperparameters; must match the pre-trained checkpoint.
+* --emb_dim, --nhead, --nlayers, --dropout, --mask_token_id: Model architecture hyperparameters; must match the pre-trained checkpoint.
 
---val_ratio (default 0.2): Fraction of cells held out for probe testing (stratified).
+* --val_ratio (default 0.2): Fraction of cells held out for probe testing (stratified).
 
---outdir (default probe_outputs): Output directory for all artifacts.
+* --outdir (default probe_outputs): Output directory for all artifacts.
 
---label_col (default subtype): Column in adata.obs containing cell labels to be mapped.
+* --label_col (default subtype): Column in adata.obs containing cell labels to be mapped.
 
---exc_labels (default cluster_2523): Comma-separated values in label_col mapped to 1 (Excitatory).
+* --exc_labels (default cluster_2523): Comma-separated values in label_col mapped to 1 (Excitatory).
 
---inh_labels (default cluster_210): Comma-separated values in label_col mapped to 0 (Inhibitory).
+* --inh_labels (default cluster_210): Comma-separated values in label_col mapped to 0 (Inhibitory).
 
 2. Outpus
 
