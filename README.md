@@ -54,11 +54,11 @@ tensorboard==2.8.0
 
 Anndata WHB-10Xv3-Neurons-raw.h5ad is from [Allen Brain Cell Atlas](https://portal.brain-map.org/atlases-and-data/bkp/abc-atlas).
 
-[fig1]
+![[fig1]](https://github.com/DZBohan/neuron_type_foundation_model/blob/main/images/fig1.png?raw=true)
 
 Progect: Transcriptomic diversity of cell types in adult human brain
 
-[fig2]
+![[fig2]](https://github.com/DZBohan/neuron_type_foundation_model/blob/main/images/fig2.png?raw=true)
 
 Dataset: [Human whole-brain transcriptomic cell type atlas (Kimberly Siletti)](https://alleninstitute.github.io/abc_atlas_access/descriptions/WHB_dataset.html)
 
@@ -123,7 +123,7 @@ Rationale of Selection
 
 * The two subclusters have balanced cell numbers, which avoids class imbalance in downstream evaluation.
 
-[fig4]
+![[fig4]](https://github.com/DZBohan/neuron_type_foundation_model/blob/main/images/fig3.png?raw=true)
 
 ## Program 1: s1_rawUmap.py
 
