@@ -183,7 +183,7 @@ The script prints information to the terminal:
 
 	* Example values from the first 10 cells.
 
-### Program 9: s9_fModelMain.py
+## Program 9: s9_fModelMain.py
 
 This script performs pre-training of a Transformer-based foundation model on a single-cell RNA-seq dataset.
 
@@ -325,5 +325,82 @@ Clear separation of excitatory (red) and inhibitory (blue) neurons suggests that
 
 ## Pre-train Level Results
 
-[fig4]
+![[fig4]](https://github.com/DZBohan/neuron_type_foundation_model/blob/main/images/fig4.png?raw=true)
 
+![[fig5]](https://github.com/DZBohan/neuron_type_foundation_model/blob/main/images/fig5.png?raw=true)
+
+![[fig6]](https://github.com/DZBohan/neuron_type_foundation_model/blob/main/images/fig6.png?raw=true)
+
+1. Results
+
+The validation perplexity started around 8.5 and decreased steadily across training epochs, reaching about 6.3 by epoch 30.
+
+This shows that the model is learning to reconstruct masked tokens more effectively over time, capturing statistical patterns in gene expression bins (tokens).
+
+The curve shows that improvement slows down after epoch 20, suggesting the model approaches a plateau.
+
+Yet, perplexity alone does not confirm biological semantics—it only measures reconstruction fit on the token distribution.
+
+Compared to language models, a perplexity of 6 is moderate: the model can predict masked bins better than chance, but not yet highly confidently.
+
+Validation and training losses track closely, suggesting no severe overfitting in this setup.
+
+2. Discussion
+
+To further reduce perplexity and enhance representation quality:
+
+* Include more clusters or additional cells to expose the model to a wider range of biological variation.
+
+* Use GPU acceleration for faster training would allow more epochs and larger models.
+
+* larger embedding dimension or more transformer layers may help capture more complex dependencies.
+
+## Probe Level Results
+
+1. Results
+
+fig7
+
+True Inhibitory (0): 94 correctly classified, 13 misclassified as Excitatory. True Excitatory (1): 91 correctly classified, 33 misclassified as Inhibitory.
+
+The classifier achieves higher precision for Excitatory (1) but slightly better recall for Inhibitory (0).
+
+Overall accuracy ≈ 0.80: This shows that the probe captures meaningful biological signals from the embeddings.
+
+Excitatory cells are more likely to be confused with Inhibitory cells (33 misclassified) than vice versa (13 misclassified). This suggests that Excitatory embeddings overlap more with Inhibitory in the feature space.
+
+fig8
+
+The PCA plot shows that inhibitory and excitatory neurons overlap almost completely in the first two principal components.
+
+This indicates that the main axes of variance in the embeddings are not strongly aligned with the Exc/Inh distinction. 
+
+PCA mainly captures global variance, so the separation is limited.
+
+fig9
+
+UMAP reveals more fine-grained local organization, showing partially mixed but slightly structured separation.
+
+There are small regions enriched for excitatory or inhibitory cells, but still with strong overlap.
+
+This suggests that the embeddings contain subtle but not dominant biological signals.
+
+fig10
+
+t-SNE highlights localized clusters where inhibitory and excitatory neurons show clearer separation than in PCA.
+
+Compared to UMAP, the Exc/Inh distinction is slightly stronger, but overlap remains.
+
+Across methods, linear PCA fails to reveal separation, while nonlinear methods (UMAP, t-SNE) extract weak subtype structure.
+
+This matches the quantitative results (Accuracy ≈ 0.80, ROC-AUC ≈ 0.86): the signal exists but is not fully disentangled in the embedding space.
+
+The model has learned some biologically meaningful representations, but the model is in its initial stage.
+
+2. Discussion
+
+Ways to Improve model performance:
+
+* Pre-train on a larger dataset including more neuronal diversity.
+
+* Increase model capacity (larger embedding dimension, more layers, GPU training).
