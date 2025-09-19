@@ -183,6 +183,100 @@ The script prints information to the terminal:
 
 	* Example values from the first 10 cells.
 
+## Program 3: s3_h5adMergeCheck.py
+
+This script is designed to verify the consistency of cell identifiers between a single-cell expression dataset stored in an .h5ad file and a metadata table stored in a .csv file. 
+
+By previewing cell barcodes and labels from both sources, I can quickly check whether the metadata aligns correctly with the AnnData object.
+
+2. parameters
+
+* Anndata: Its .obs_names field holds the unique identifiers (cell barcodes) for each cell.
+
+* cell_metadata.csv: It must include at least cell_barcode: the unique identifier for each cell, expected to match the AnnData .obs_names; and cell_label: cell type or other categorical information for each cell.
+
+3. Outputs
+
+The script prints quick previews to the terminal for verification:
+
+* obs_names example: the first 5 cell barcodes from the AnnData file.
+
+* cell_label example: the first 5 labels from the metadata CSV.
+
+* cell_barcode example: the first 5 barcodes from the metadata CSV.
+
+These outputs allow me to check whether the cell_barcode column in the metadata matches the obs_names in the .h5ad file.
+
+## Program 4: s4_h5adCluster.py
+
+This script subsets a single-cell Anndata stored in an .h5ad file based on metadata information. 
+
+It selects specific clusters (given by their IDs in the metadata) and creates a smaller AnnData object containing only the cells from those clusters. 
+
+Each selected cluster is annotated with a subtype label, and the subset is saved as a new .h5ad file.
+
+1. Parameters
+
+* --adata (.h5ad): The input AnnData file containing the single-cell expression matrix.
+
+* --meta (.csv): Metadata table providing cell annotations. Must contain at least:
+
+* obsname-col (default: cell_label): matches adata.obs_names for alignment.
+
+* label-col (default: cluster_alias): specifies cluster IDs.
+
+* --obsname-col (optional, default=cell_label): Column in the metadata that exactly matches the cell identifiers in the .h5ad file.
+
+* --label-col (optional, default=cluster_alias): Column in the metadata containing cluster IDs.
+
+* --ids (required): Comma-separated list of cluster IDs to keep (e.g., 2523,210).
+
+* --out (.h5ad): Path to save the output subset AnnData file.
+
+2. Outputs
+
+* A subset .h5ad file that contains only the cells belonging to the specified clusters.
+
+* A new column subtype is added to obs, where each selected cluster is labeled (e.g., cluster_2523, cluster_210).
+
+## Program 5: s5_subh5adCheck.py
+
+This script provides a quick diagnostic summary of a subset .h5ad file. 
+
+It automatically detects the cluster annotation column in obs, counts how many cells belong to specific clusters (2523 and 210), and optionally checks these counts restricted to the Cerebral cortex region. 
+
+Finally, it reports the file size.
+
+1. Parameters
+
+This script does not take command-line arguments; instead, key inputs are hard-coded:
+
+* PATH (string): Path to the .h5ad file to inspect.
+
+* obs columns (inside the file): The script automatically scans for one of these cluster-like columns: ["cluster", "subtype", "cluster_alias", "cluster_label", "label"]. The first match is used.
+
+* anatomical_division_label (optional column in obs): If present, the script further restricts analysis to cells from the Cerebral cortex only.
+
+2. Outputs
+
+Printed summary to console, including:
+
+* Total number of cells in the dataset.
+
+* Number of cells in cluster_2523 and cluster_210.
+
+* Name of the cluster column used and example values.
+
+* If available: counts restricted to the Cerebral cortex.
+
+* File size of the .h5ad in human-readable units (e.g., MB, GB).
+
+## Program 6: s6_subh5adRegion.py
+
+## Program 7: s7_makeUnique.py
+
+## Program 8: s8_cellGeneCrop.py
+
 ## Program 9: s9_fModelMain.py
 
 This script performs pre-training of a Transformer-based foundation model on a single-cell RNA-seq dataset.
@@ -359,7 +453,7 @@ To further reduce perplexity and enhance representation quality:
 
 1. Results
 
-fig7
+![fig7](https://github.com/DZBohan/neuron_type_foundation_model/blob/main/images/fig7.png?raw=true)
 
 True Inhibitory (0): 94 correctly classified, 13 misclassified as Excitatory. True Excitatory (1): 91 correctly classified, 33 misclassified as Inhibitory.
 
@@ -369,7 +463,7 @@ Overall accuracy ≈ 0.80: This shows that the probe captures meaningful biologi
 
 Excitatory cells are more likely to be confused with Inhibitory cells (33 misclassified) than vice versa (13 misclassified). This suggests that Excitatory embeddings overlap more with Inhibitory in the feature space.
 
-fig8
+![fig8](https://github.com/DZBohan/neuron_type_foundation_model/blob/main/images/fig8.png?raw=true)
 
 The PCA plot shows that inhibitory and excitatory neurons overlap almost completely in the first two principal components.
 
@@ -377,7 +471,7 @@ This indicates that the main axes of variance in the embeddings are not strongly
 
 PCA mainly captures global variance, so the separation is limited.
 
-fig9
+![[fig9]](https://github.com/DZBohan/neuron_type_foundation_model/blob/main/images/fig9.png?raw=true)
 
 UMAP reveals more fine-grained local organization, showing partially mixed but slightly structured separation.
 
@@ -385,7 +479,7 @@ There are small regions enriched for excitatory or inhibitory cells, but still w
 
 This suggests that the embeddings contain subtle but not dominant biological signals.
 
-fig10
+![fig10](https://github.com/DZBohan/neuron_type_foundation_model/blob/main/images/fig10.png?raw=true)
 
 t-SNE highlights localized clusters where inhibitory and excitatory neurons show clearer separation than in PCA.
 
