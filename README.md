@@ -277,7 +277,23 @@ The results cells from these two subcluster are not all located in cerebral cort
 
 ## Program 6: s6_subh5adRegion.py
 
+This script filters a given .h5ad dataset to retain only cells from a specific anatomical region. 
 
+The region is defined by matching values in a chosen metadata (obs) column, typically anatomical_division_label. 
+
+1. Parameters
+
+* --in (string, required): Path to the input .h5ad file.
+
+* --out (string, required): Path to save the filtered .h5ad file.
+
+* --region (string, required): Exact region name to filter (e.g., "Cerebral cortex").
+
+* --region-col (string, optional, default=anatomical_division_label): Column in obs that stores region annotations. If missing, the script will raise an error.
+
+2. Outputs
+
+A new .h5ad file (--out) containing only cells that belong to the specified region.
 
 ## Program 7: s7_makeUnique.py
 
@@ -295,7 +311,7 @@ The script logs training/validation performance, evaluates perplexity and masked
 
 1. Parameters
 
-The script uses hard-coded configuration values at the top of the file (the “Config Zone”):
+The script uses hard-coded configuration values at the top of the file:
 
 * DATA_PATH: Path to input .h5ad file (AnnData object with cell × gene matrix).
 
