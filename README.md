@@ -86,6 +86,7 @@ This file maps the label (cluster ID) to a cluster_alias (numeric code).
 
 * Download URL: [https://allen-brain-cell-atlas.s3-us-west-2.amazonaws.com/metadata/WHB-taxonomy/20240330/cluster.csv](https://allen-brain-cell-atlas.s3-us-west-2.amazonaws.com/metadata/WHB-taxonomy/20240330/cluster.csv)
 
+
 3. cell_metadata.csv
 
 This file contains per-cell metadata, including each cell’s cluster assignment and embedding coordinates (x, y).
@@ -95,3 +96,63 @@ This file contains per-cell metadata, including each cell’s cluster assignment
 * It allows us to link each single cell to its cluster/subcluster and visualize embeddings such as UMAP/t-SNE.
 
 * Download URL: [https://allen-brain-cell-atlas.s3-us-west-2.amazonaws.com/metadata/WHB-10Xv3/20241115/cell_metadata.csv](https://allen-brain-cell-atlas.s3-us-west-2.amazonaws.com/metadata/WHB-10Xv3/20241115/cell_metadata.csv)
+
+## Clusters
+
+For this initial study, I selected two neuronal subclusters from the cerebral cortex:
+
+1. Subcluster 2523 (CS20221040_3017)
+
+* Cortical layer 5 excitatory neurons
+
+* 682 cells
+
+2. Subcluster 210 (CS20221040_704)
+
+* Medial ganglionic eminence (MGE) interneurons
+
+* 678 cells
+
+Rationale of Selection
+
+* Represents two fundamental neuronal types: Excitatory vs. Inhibitory.
+
+* Both are located in nearby regions of the deep cerebral cortex, ensuring biological relevance.
+
+* Each subcluster has a sufficient number of cells to support a "hello world" style pre-training experiment.
+
+* The two subclusters have balanced cell numbers, which avoids class imbalance in downstream evaluation.
+
+[fig4]
+
+## Program 1: s1_rawUmap.py
+
+This script visualizes cortical single-cell clusters using pre-computed embeddings from cell_metadata.csv. It merges cluster definitions from cluster.csv and cluster_annotation_term.csv, groups cells by their base cluster type, and highlights selected subclusters if specified. The output is a UMAP-like scatter plot showing the spatial distribution of the top-K clusters, with smaller clusters grouped as “Others”.
+
+1. Parameters
+
+--cell-meta : Path to cell_metadata.csv. Must contain columns: x, y, cluster_alias (cell embedding coordinates and subcluster ID).
+
+--cluster : Path to cluster.csv. Provides the mapping between cluster_alias and label.
+
+--annot : Path to cluster_annotation_term.csv. Provides human-readable description for each cluster label.
+
+--out : Output file path for the figure (png/pdf/svg). Default: cortical_umap.png.
+
+--title : Title of the figure. Default: "Cortical UMAP – Top-K clusters".
+
+--top-k : Number of most frequent base clusters to explicitly color. Default: 10.
+
+--highlight-subclusters : Comma-separated list of cluster_alias IDs to highlight (e.g., "2523,210"). Empty string means no highlight.
+
+2. Output
+
+The script produces a scatter plot showing cell embeddings colored by their base cluster type.
+
+* The Top-K clusters are shown in distinct colors.
+
+* All other clusters are merged into an “Others” category (gray).
+
+* Any specified subclusters are overlaid as hollow black circles.
+
+Program 2: 
