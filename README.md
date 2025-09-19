@@ -183,6 +183,8 @@ The script prints information to the terminal:
 
 	* Example values from the first 10 cells.
 
+![[fig12]](https://github.com/DZBohan/neuron_type_foundation_model/blob/main/images/fig12.png?raw=true)
+
 ## Program 3: s3_h5adMergeCheck.py
 
 This script is designed to verify the consistency of cell identifiers between a single-cell expression dataset stored in an .h5ad file and a metadata table stored in a .csv file. 
