@@ -271,7 +271,9 @@ Printed summary to console, including:
 
 * File size of the .h5ad in human-readable units (e.g., MB, GB).
 
-[fig11]
+![[fig11]](https://github.com/DZBohan/neuron_type_foundation_model/blob/main/images/fig11.png?raw=true)
+
+The results cells from these two subcluster are not all located in cerebral cortex, so I will next the next Program 6 to grab cells only in cerebral cortex.
 
 ## Program 6: s6_subh5adRegion.py
 
