@@ -299,7 +299,58 @@ A new .h5ad file (--out) containing only cells that belong to the specified regi
 
 ## Program 7: s7_makeUnique.py
 
+This script ensures that gene names (var_names) and cell barcodes (obs_names) in an AnnData object are unique. 
+
+While this functionality is already included in the downstream Program 8, this script can be used independently if you only need to enforce uniqueness of IDs without running the full pipeline.
+
+1. Parameters
+
+* --infile (required): Path to the input .h5ad file.
+
+* --outfile (required): Path to the output .h5ad file, where the unique IDs will be saved.
+
+2. Output
+
+* A new .h5ad file with unique gene names and cell IDs.
+
+* Console messages reporting how many duplicate gene names and cell IDs were detected.
+
 ## Program 8: s8_cellGeneCrop.py
+
+This script builds a small, reproducible “hello-world” AnnData slice from a large .h5ad. It is designed to give you a compact subset (e.g., a few hundred–thousand cells and selected genes) that preserves basic signal structure for quick prototyping and pre-training. Pipeline stages implemented in the code:
+
+* Load the input .h5ad. If layers["counts"] exists it is used as the numeric basis; otherwise adata.X is used.
+
+* De-duplicate IDs: make cell IDs (obs_names) and gene names (var_names) unique, or collapse/drop duplicates according to user options.
+
+* Optionally drop all-zero genes/cells.
+
+* Summarize sparsity (before): shape, non-zero fraction, median non-zeros per cell/gene.
+
+* Stratified cell sampling:
+
+	* Compute per-cell non-zero counts.
+
+	* Split cells into strata quantile bins (to cover low/medium/high depth cells).
+
+	* Sample roughly equally from each bin until reaching --cells (seeded for reproducibility).
+
+	* Gene selection from the sampled cells:
+
+	* Compute per-gene detection fraction (share of sampled cells where gene > 0) and standard deviation.
+
+	* Keep genes with detection ≥ min_gene_detect_frac. If not enough, back-off to the top genes by detection fraction.
+
+	* Draw weighted, no-replacement gene samples up to --genes, with weight $w_g \propto (\text{detect}_g)^{\alpha_{\text{detect}}} \cdot (\text{std}_g)^{\beta_{\text{std}}}$
+
+$$
+w_g \propto (\text{detect}_g)^{\alpha_{\text{detect}}} \cdot (\text{std}_g)^{\beta_{\text{std}}}
+$$
+
+
+
+
+
 
 ## Program 9: s9_fModelMain.py
 
