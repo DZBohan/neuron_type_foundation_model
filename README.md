@@ -341,16 +341,85 @@ This script builds a small, reproducible “hello-world” AnnData slice from a 
 
 	* Keep genes with detection ≥ min_gene_detect_frac. If not enough, back-off to the top genes by detection fraction.
 
-	* Draw weighted, no-replacement gene samples up to --genes, with weight $w_g \propto (\text{detect}_g)^{\alpha_{\text{detect}}} \cdot (\text{std}_g)^{\beta_{\text{std}}}$
+	* Draw weighted, no-replacement gene samples up to --genes, with weight. This biases toward informative, variable genes.
 
 $$
 w_g \propto (\text{detect}_g)^{\alpha_{\text{detect}}} \cdot (\text{std}_g)^{\beta_{\text{std}}}
 $$
 
+1. Parameters
+
+* -i, --input (required): Input .h5ad. If layers["counts"] exists it’s used; otherwise X is used.
+
+* -o, --output (required): Output .h5ad (gzipped).
+
+* --report_csv (optional): Path to write a small CSV with before/after sparsity metrics.
+
+* --cells (int, default=200): Target number of cells to sample. If larger than available, all cells are used. (Note: setting --cells to a very large value, e.g., 1,000,000, simply keeps all cells; it does not break the code.)
+
+* --genes (int, default=500): Target number of genes to select. If fewer candidates remain, you’ll get as many as possible.
+
+* --seed (int, default=1): RNG seed for reproducibility.
+
+* --strata (int, default=4): Number of quantile bins for stratified cell sampling. 1 ≈ simple random sample; larger values better preserve depth diversity.
+
+* --min_gene_detect_frac (float, default=0.05): Minimum detection fraction to admit a gene to the candidate pool.
+
+* --alpha_detect (float, default=1.0): Exponent on detection fraction in the gene-weight formula. Higher → favor widely detected genes.
+
+* --beta_std (float, default=0.5): Exponent on per-gene std in the gene-weight formula. Higher → favor variable genes.
+
+* --gene_dedupe_mode {"make_unique","collapse"} (default: make_unique):
+
+	* make_unique: Scanpy will suffix duplicates (Gene, Gene-1, …).
+
+	* collapse: Sum duplicate-named gene columns into one, update var accordingly (applied consistently to layers['counts']/X).
+
+* --cell_dedupe_mode {"make_unique","drop"} (default: make_unique):
+
+	* make_unique: suffix duplicate cell IDs.
+
+	* drop: keep the first occurrence, drop later duplicates.
+
+	* --drop_allzero_genes (flag): Drop any gene whose column is all zeros.
+
+	* --drop_allzero_cells (flag): Drop any cell whose row is all zeros.
 
 
+2. Output
 
+* Gzipped .h5ad at --output, containing only the selected cells × genes.
 
+* If input had layers['counts'], it remains aligned and subset.
+
+* adata.uns includes:
+
+	* crop_params: all parameters used, input_basis ("layers['counts']" or "X"), seed, dedupe modes, etc.
+
+	* sparsity_summary: dictionaries for before and after with
+shape, nonzero_fraction, median_nonzero_per_cell, median_nonzero_per_gene.
+
+	* crop_indices: the selected cell and gene indices relative to the input (as lists).
+
+* Optional CSV (--report_csv): two rows (before, after) with the same sparsity metrics.
+
+* Stdout logs: sizes chosen, basic checks, and any drops applied.
+
+3. Example usage
+
+```
+python crop_hello_world.py \
+  -i big_atlas.h5ad \
+  -o subset_hello.h5ad \
+  --report_csv subset_metrics.csv \
+  --cells 1000000 --genes 2000 \
+  --strata 4 --min_gene_detect_frac 0.05 \
+  --alpha_detect 1.0 --beta_std 0.5 \
+  --gene_dedupe_mode make_unique \
+  --cell_dedupe_mode make_unique \
+  --drop_allzero_genes --drop_allzero_cells \
+  --seed 42
+```
 
 ## Program 9: s9_fModelMain.py
 
@@ -403,6 +472,26 @@ The script uses hard-coded configuration values at the top of the file:
 * Figures (FIG_DIR/): Line plots of train loss, val loss, val perplexity, and val masked accuracy.
 
 * Quick demo (console log): Example masked predictions for one validation cell, showing top-k guesses vs. ground truth.
+
+3. Usage in the Project
+
+```
+SEED       = 42
+USE_LOG1P  = True
+NUM_BINS   = 20
+BATCH_SIZE = 64
+VAL_BATCH  = 128
+EPOCHS     = 30
+EMB_DIM    = 64
+NHEAD      = 4
+NLAYERS    = 3
+DROPOUT    = 0.1
+LR         = 5e-4
+WEIGHT_DECAY = 1e-2
+VAL_RATIO  = 0.2
+MASK_RATIO = 0.15
+NONZERO_FRAC = 0.5
+```
 
 ## Program 10: s10_probeEval.py
 
@@ -465,6 +554,27 @@ All files are written to --outdir:
 * roc_probe.png: ROC curve with AUC for the held-out test set.
 
 * run_meta.json: JSON capturing all key settings and metrics (paths, binning, model hyperparameters, accuracy/F1/ROC-AUC, n_cells/n_genes).
+
+3. Usage in the Project
+
+```
+python probeEval.py \
+  --adata subset_2523_210_Cerebral-cortex.screened.h5ad \
+  --checkpoint ckpts_2523_210_1/hello_model_best.pt \
+  --binmeta ckpts_2523_210_1/binning_meta.npz \
+  --use_log1p \
+  --num_bins 20 \
+  --batch_size 128 \
+  --emb_dim 64 \
+  --nhead 4 \
+  --nlayers 3 \
+  --dropout 0.1 \
+  --val_ratio 0.2 \
+  --label_col subtype \
+  --exc_labels cluster_2523 \
+  --inh_labels cluster_210 \
+  --outdir probe_outputs_v1
+```
 
 ## Program 11: s11_afterProbeVis.py
 
