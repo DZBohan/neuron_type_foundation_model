@@ -772,13 +772,15 @@ This matches the quantitative results (Accuracy ≈ 0.80, ROC-AUC ≈ 0.86): the
 
 The model has learned some biologically meaningful representations, but the model is in its initial stage.
 
-[fig12]
+![[fig13]](https://github.com/DZBohan/neuron_type_foundation_model/blob/main/images/fig13.png?raw=true)
 
 The KNN unsupervised clustering (Louvain) produced finer-grained subclusters rather than directly matching the binary labels.
 
 This indicates that the embedding space captures intra-class heterogeneity, but its separation power between inhibitory vs excitatory is still limited.
 
 This suggests that the embedding preserves some biological structure beyond just binary excitatory/inhibitory separation.
+
+
 
 2. Discussion
 
