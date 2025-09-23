@@ -28,7 +28,6 @@ def plot_confusion_matrix(cm, labels=('Inhibitory (0)', 'Excitatory (1)'), out_p
     plt.close()
 
 def scatter_umap(adata, color, out_png, title, palette=None):
-    # 统一风格的小而清晰点
     fig, ax = plt.subplots(figsize=(6,5), dpi=150)
     if palette is None:
         sc.pl.umap(adata, color=color, ax=ax, show=False, size=8, alpha=0.8)
@@ -58,17 +57,17 @@ def main():
     y = np.load(args.lab).astype(int)  # [N], 0/1
     assert X.shape[0] == y.shape[0], "embeddings and labels must have same #cells"
 
-    # 2) Z-score (推荐在表达型 embedding 上做)
+    # 2) Z-score
     Xz = StandardScaler().fit_transform(X)
 
     # 3) Build AnnData + neighbors graph
     ad = sc.AnnData(X=Xz)
     sc.pp.neighbors(ad, n_neighbors=args.n_neighbors, metric=args.metric)
 
-    # 4) UMAP 仅用于可视化（不影响聚类）
+    # 4) UMAP for visualization only (does not affect clustering)
     sc.tl.umap(ad, min_dist=args.umap_min_dist, random_state=args.random_state)
 
-    # 5) Louvain（如缺依赖，自动回退到 Leiden 并提示）
+    # 5) Louvain (fallback to Leiden if missing dependencies)
     used_method = "louvain"
     try:
         sc.tl.louvain(ad, resolution=args.resolution, key_added="louvain")
@@ -86,8 +85,8 @@ def main():
     h   = homogeneity_score(y, pred)
     c   = completeness_score(y, pred)
 
-    # 为二分类真值生成一个“最佳对齐”的二值预测：找出哪个簇对应 1/0 更多
-    # 简单策略：按簇内众数标签进行簇→{0/1}映射
+    # Generate a “best-aligned” binary prediction from true binary labels:
+    # simple strategy: map each cluster to {0/1} by majority label within the cluster
     df = pd.DataFrame({"pred": pred, "y": y})
     map_tbl = df.groupby("pred")["y"].agg(lambda s: 1 if (s.mean() >= 0.5) else 0).to_dict()
     bin_pred = np.array([map_tbl[p] for p in pred], dtype=int)
@@ -133,7 +132,7 @@ def main():
     plot_confusion_matrix(cm, out_png=os.path.join(args.outdir, f"cm_{used_method}.png"),
                           title=f"Confusion Matrix ({used_method}→bin)")
 
-    # 8.4 Cluster size条形图 + 纯度（簇内主类占比）
+    # 8.4 Cluster size barplot + purity (proportion of majority class in cluster)
     cl_sizes = df.groupby("pred").size().rename("size")
     purity = df.groupby("pred")["y"].apply(lambda s: max((s==0).mean(), (s==1).mean())).rename("purity")
     stat = pd.concat([cl_sizes, purity], axis=1).reset_index().rename(columns={"pred":"cluster"})

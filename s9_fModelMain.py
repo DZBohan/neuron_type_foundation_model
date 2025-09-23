@@ -107,14 +107,14 @@ def apply_bin_edges(X, edges_list, num_bins=NUM_BINS):
 edges = compute_bin_edges_per_gene(X_train, num_bins=NUM_BINS)
 binned_train = apply_bin_edges(X_train, edges, num_bins=NUM_BINS)
 
-# === 新增：保存“分桶边界 + 基因顺序 + 预处理设置”，以便下游/推理复用 ===
+# New: Save "binning edges + gene order + preprocessing settings" for reuse in downstream/inference
 np.savez(
     os.path.join(CHECKPOINT_DIR, "binning_meta.npz"),
-    edges=np.array(edges, dtype=object),          # 逐基因边界（object 数组）
-    gene_names=np.array(adata.var_names),         # 训练时基因顺序
-    num_bins=np.int32(NUM_BINS),                  # 分桶数
-    target_sum=np.float32(1e4),                   # 归一化用的 target_sum
-    use_log1p=np.bool_(USE_LOG1P)                 # 是否做了 log1p
+    edges=np.array(edges, dtype=object),          # per-gene binning edges (object array)
+    gene_names=np.array(adata.var_names),         # gene order used during training
+    num_bins=np.int32(NUM_BINS),                  # number of bins
+    target_sum=np.float32(1e4),                   # target sum used for normalization
+    use_log1p=np.bool_(USE_LOG1P)                 # whether log1p was applied
 )
 
 binned_val   = apply_bin_edges(X_val,   edges, num_bins=NUM_BINS)
