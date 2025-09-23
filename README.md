@@ -155,6 +155,19 @@ The script produces a scatter plot showing cell embeddings colored by their base
 
 * Any specified subclusters are overlaid as hollow black circles.
 
+3. Usage in the Project
+
+```
+python s1_rawUmap.py \
+  --cell-meta cell_metadata.csv \
+  --cluster cluster.csv \
+  --annot cluster_annotation_term.csv \
+  --out umap/umap_top31.png \
+  --top-k 31 \
+  --title "UMAP – Top-31 clusters" \
+  --highlight-subclusters 210,2523
+```
+
 ## Program 2: s2_h5adCheck.py
 
 This script inspects the contents of a single-cell .h5ad Anndata. It prints summary information about the dataset, including the number of cells and genes, available metadata columns in both observations (obs) and variables (var), as well as any unstructured metadata (uns). In addition, it provides a detailed summary of the column anatomical_division_label, including unique categories, counts, and example values. This step is designed for exploratory data inspection before downstream analysis.
@@ -241,6 +254,18 @@ Each selected cluster is annotated with a subtype label, and the subset is saved
 
 * A new column subtype is added to obs, where each selected cluster is labeled (e.g., cluster_2523, cluster_210).
 
+3. Usage in the Project
+
+```
+python s4_h5adCluster.py \
+  --adata WHB-10Xv3-Neurons-raw.h5ad \
+  --meta cell_metadata.csv \
+  --obsname-col cell_label \
+  --label-col cluster_alias \
+  --ids 2523,210 \
+  --out subset_2523_210.h5ad
+```
+
 ## Program 5: s5_subh5adCheck.py
 
 This script provides a quick diagnostic summary of a subset .h5ad file. 
@@ -296,6 +321,15 @@ The region is defined by matching values in a chosen metadata (obs) column, typi
 2. Outputs
 
 A new .h5ad file (--out) containing only cells that belong to the specified region.
+
+3. Usage in the Project
+
+```
+python s6_subh5adRegion.py \
+  --in subset_2523_210.h5ad \
+  --out subset_2523_210_Cerebral-cortex.h5ad \
+  --region "Cerebral cortex"
+```
 
 ## Program 7: s7_makeUnique.py
 
@@ -405,20 +439,17 @@ shape, nonzero_fraction, median_nonzero_per_cell, median_nonzero_per_gene.
 
 * Stdout logs: sizes chosen, basic checks, and any drops applied.
 
-3. Example usage
+3. Usage in the Project
 
 ```
-python crop_hello_world.py \
-  -i big_atlas.h5ad \
-  -o subset_hello.h5ad \
-  --report_csv subset_metrics.csv \
-  --cells 1000000 --genes 2000 \
-  --strata 4 --min_gene_detect_frac 0.05 \
-  --alpha_detect 1.0 --beta_std 0.5 \
+python s8_cellGeneCrop.py \
+  -i subset_2523_210_Cerebral-cortex.h5ad \
+  -o subset_2523_210_Cerebral-cortex.screened.h5ad \
+  --cells 1000000 \
+  --genes 2000 \
+  --drop_allzero_genes \
   --gene_dedupe_mode make_unique \
-  --cell_dedupe_mode make_unique \
-  --drop_allzero_genes --drop_allzero_cells \
-  --seed 42
+  --cell_dedupe_mode make_unique
 ```
 
 ## Program 9: s9_fModelMain.py
@@ -601,6 +632,8 @@ Cells are colored according to their neuronal type labels (Excitatory vs. Inhibi
 * umap_probe.png: 2D scatter plot of embeddings reduced by UMAP, colored by neuronal labels.
 
 Clear separation of excitatory (red) and inhibitory (blue) neurons suggests that the pretrained embeddings capture biologically relevant signals.
+
+## Program 12: s12_afterProbeKnn.py
 
 ## Pre-train Level Results
 
