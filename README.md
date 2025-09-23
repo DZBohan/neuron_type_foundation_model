@@ -635,6 +635,69 @@ Clear separation of excitatory (red) and inhibitory (blue) neurons suggests that
 
 ## Program 12: s12_afterProbeKnn.py
 
+This script evaluates your learned embedding space with unsupervised clustering:
+
+* Standardizes the cell embeddings (z-score).
+
+* Builds a k-Nearest Neighbor (kNN) graph on the embeddings
+
+* Runs Louvain community detection to get cluster IDs
+(auto-fallback to Leiden if Louvain/igraph isn’t available).
+
+* Computes agreement metrics against the provided binary ground truth (0/1):
+ARI, NMI, Homogeneity, Completeness.
+
+* Converts multi-cluster outputs to binary by majority vote per cluster and produces a confusion matrix.
+
+* Generates clear visualizations: UMAP colored by predicted clusters and by true labels, confusion-matrix heatmap, and a cluster size & purity chart.
+
+1. Parameters
+
+* --emb (str, default: probe_outputs_v1/embeddings.npy): Path to embeddings array.
+
+* --lab (str, default: probe_outputs_v1/labels.npy)
+Path to binary labels [N] with values {0,1}.
+
+* --outdir (str, default: unsup_louvain_outputs).
+
+* --n_neighbors (int, default: 15).
+
+* --metric (“cosine” | “euclidean”, default: cosine): Distance metric for the neighbor graph.
+
+* --resolution (float, default: 0.8).
+
+* --umap_min_dist (float, default: 0.3): Visualization only; controls UMAP point packing.
+
+* --random_state (int, default: 42): Random seed for UMAP (reproducible layouts).
+
+2. Output
+
+* umap_louvain.png (or umap_leiden.png): UMAP colored by predicted clusters.
+
+* umap_true_label.png: UMAP colored by true labels (0/1).
+
+* cm_louvain.png (or cm_leiden.png): Confusion matrix heatmap.
+
+* cluster_size_purity_louvain.png (or _leiden.png): Bar plot of cluster sizes.
+
+* confusion_matrix_louvain.csv (or _leiden.csv): Confusion matrix.
+
+* cluster_stats_louvain.csv (or _leiden.csv): Size and purity per cluster.
+
+* summary.json — All run parameters and metrics.
+
+3. Usage in the Project
+
+```
+python afterProbeKnn.py \
+  --emb probe_outputs_v1/embeddings.npy \
+  --lab probe_outputs_v1/labels.npy \
+  --outdir unsup_louvain_k15 \
+  --n_neighbors 15 \
+  --resolution 0.1 \
+  --metric cosine
+```
+
 ## Pre-train Level Results
 
 ![[fig4]](https://github.com/DZBohan/neuron_type_foundation_model/blob/main/images/fig4.png?raw=true)
