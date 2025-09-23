@@ -780,7 +780,15 @@ This indicates that the embedding space captures intra-class heterogeneity, but 
 
 This suggests that the embedding preserves some biological structure beyond just binary excitatory/inhibitory separation.
 
+![[fig14]](https://github.com/DZBohan/neuron_type_foundation_model/blob/main/images/fig14.png?raw=true)
 
+The confusion matrix is derived after aligning Louvain clusters to binary labels (0/1). It tells how well the unsupervised clusters correspond to the known biological classes.
+
+* True 0 (Inhibitory): 319 correctly predicted as 0, but 213 misclassified as 1.
+
+* True 1 (Excitatory): 501 correctly predicted as 1, but 119 misclassified as 0.
+
+Overall, the clustering has reasonable alignment with true labels, but with noticeable overlap.
 
 2. Discussion
 
